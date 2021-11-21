@@ -1,6 +1,6 @@
 import { GameState } from "./gamestate";
 
-const gamestate = new GameState(16, 16);
+const gamestate = new GameState(32, 32);
 window.game = gamestate;
 
 window.addEventListener("resized", gamestate.resizeWindow);

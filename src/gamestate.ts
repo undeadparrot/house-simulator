@@ -81,7 +81,7 @@ export class GameState {
       0.2
     );
     this.scene.add(this.hitarrow);
-    this.hitcage = new THREE.Box3Helper(new THREE.Box3(), GREEN);
+    this.hitcage = new THREE.Box3Helper(new THREE.Box3(), RED);
     this.scene.add(this.hitcage);
 
     const axes = new THREE.AxesHelper(1);
@@ -148,10 +148,19 @@ export class GameState {
 
       const hits = this.terrainRenderer.raycast(raycaster);
       const firstHit = hits[hits.length-1];
-      console.log(hits);
+      // console.log("hits", hits);
 
       if (firstHit !== undefined) {
+        const hitTileX = Math.floor(firstHit.point.x);
+        const hitTileZ = Math.floor(firstHit.point.z);
+        const hitTileHeight = this.grid.get(hitTileX, hitTileZ) || 0;
+        this.grid.brush(new THREE.Vector2(hitTileX, hitTileZ), 3, 0.02);
+
+        const hitTileBlPoint = new THREE.Vector3(hitTileX, hitTileHeight, hitTileZ);
+        const hitTileTrPoint = hitTileBlPoint.clone().add(new THREE.Vector3(1, 0.1, 1));
+
         this.hitarrow.position.copy(firstHit.point);
+        this.hitcage.box.setFromPoints([hitTileBlPoint, hitTileTrPoint]);
         if (firstHit.face) {
           const p0 = firstHit.point;
           const debugtext = document.querySelector<HTMLDivElement>(

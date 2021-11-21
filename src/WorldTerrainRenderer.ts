@@ -26,7 +26,7 @@ export class WorldTerrainRenderer {
     this._texture.minFilter = THREE.NearestFilter;
 
     const geom = new THREE.BufferGeometry();
-    const material = new THREE.MeshBasicMaterial({color:GREEN});//MeshStandardMaterial( { map: this._texture });
+    const material = new THREE.MeshBasicMaterial({map: this._texture});//MeshStandardMaterial( { map: this._texture });
     this._mesh = new THREE.Mesh(geom, material);
     this._group.add(this._mesh);
 
@@ -50,16 +50,6 @@ export class WorldTerrainRenderer {
       new_uvBuffer[i] = this._uvBuffer[i];
     }
     this._uvBuffer = new_uvBuffer;
-
-    const new_indexBuffer = new Array(
-      tris*VERTS_PER_TRIANGLE
-    );
-    const current_indexBuffer = this._mesh.geometry.getIndex()?.array || [];
-    for (let i in current_indexBuffer) {
-      new_indexBuffer[i] = current_indexBuffer[i];
-    }
-
-    this._mesh.geometry.setIndex(new_indexBuffer);
     
     this._positionAttribute = new THREE.BufferAttribute(
       this._positionBuffer,
@@ -70,7 +60,7 @@ export class WorldTerrainRenderer {
       this._uvBuffer,
       FLOATS_PER_VERT_UV
     );
-    // this._mesh.geometry.setAttribute("uv", this._uvAttribute);
+    this._mesh.geometry.setAttribute("uv", this._uvAttribute);
 
     this._mesh.geometry.setDrawRange(0, tris * VERTS_PER_TRIANGLE);
   }
@@ -91,31 +81,71 @@ export class WorldTerrainRenderer {
     let k = 0;
     const positions = this._positionBuffer;
     const uvs = this._uvBuffer;
-    const indexes = this._mesh.geometry.getIndex().array;
-    for (let y = 0; y < world.h; y++) {
-        for (let x = 0; x < world.w; x++) {
-            const height = world.get(x,y)!;
-            positions[i++] = x;
-            positions[i++] = x*0.1;
-            positions[i++] = y;
-            uvs[j++] = x;
-            uvs[j++] = y;
-      }
-    }
     for (let y = 0; y < world.h-1; y++) {
         for (let x = 0; x < world.w-1; x++) {
-            const yw = world.w * y;
-            indexes[k++] = yw + x;
-            indexes[k++] = yw + x + world.w;
-            indexes[k++] = yw + x + 1;
-        
-            indexes[k++] = yw + x + 1;
-            indexes[k++] = yw + x + world.w;
-            indexes[k++] = yw + x + world.w + 1;
-          
+            const tlHeight = world.get(x,y)!;
+            const trHeight = world.get(x+1,y)!;
+            const blHeight = world.get(x,y+1)!;
+            const brHeight = world.get(x+1,y+1)!;
+
+            const texture = {tl: new THREE.Vector2(0,0), tr: new THREE.Vector2(0.5,0),bl: new THREE.Vector2(0,0.5), br: new THREE.Vector2(0.5,0.5)}
+
+            /* Top Right */
+            positions[i++] = x+1;
+            positions[i++] = trHeight;
+            positions[i++] = y;
+            uvs[j++] = texture.tr.x;
+            uvs[j++] = texture.tr.y;
+            
+            /* Top Left */
+            positions[i++] = x;
+            positions[i++] = tlHeight;
+            positions[i++] = y;
+            uvs[j++] = texture.tl.x;
+            uvs[j++] = texture.tl.y;
+
+            /* Bottom Left */
+            positions[i++] = x;
+            positions[i++] = blHeight;
+            positions[i++] = y+1;
+            uvs[j++] = texture.bl.x;
+            uvs[j++] = texture.bl.y;
+            tris++;
+
+            /* Bottom Left */
+            positions[i++] = x;
+            positions[i++] = blHeight;
+            positions[i++] = y+1;
+            uvs[j++] = texture.bl.x;
+            uvs[j++] = texture.bl.y;
+
+            /* Bottom Right */
+            positions[i++] = x+1;
+            positions[i++] = brHeight;
+            positions[i++] = y+1;
+            uvs[j++] = texture.br.x;
+            uvs[j++] = texture.br.y;
+
+            /* Top Right */
+            positions[i++] = x+1;
+            positions[i++] = trHeight;
+            positions[i++] = y;
+            uvs[j++] = texture.tr.x;
+            uvs[j++] = texture.tr.y;
+            tris++;
+            }
         }
-      }
-  };
+        this._positionAttribute.needsUpdate = true;
+        this._uvAttribute.needsUpdate = true;
+        this._mesh.geometry.computeVertexNormals();
+        this._mesh.geometry.computeBoundingBox();
+        this._mesh.geometry.computeBoundingSphere();
+    }
+    raycast = (raycaster: THREE.Raycaster) => {
+      const intersects: THREE.Intersection<THREE.Object3D<THREE.Event>>[] = [];
+      this._mesh.raycast(raycaster, intersects);
+      return intersects;
+    };
 }
 
 //#region corners
