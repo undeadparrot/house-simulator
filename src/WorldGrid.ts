@@ -15,7 +15,7 @@ export class WorldGrid {
   public brush(p0: THREE.Vector2, width: number, strength: number) {
     const blocksRadius = Math.ceil(width/2);
     const p1 = new THREE.Vector2();
-    console.group()
+    
     for(let x = p0.x-blocksRadius; x < p0.x+blocksRadius; x++){
       for(let y = p0.y-blocksRadius; y < p0.y+blocksRadius; y++){
         if(x >= this.w || y >= this.h || x < 0 || y < 0){
@@ -23,12 +23,12 @@ export class WorldGrid {
         }
         p1.set(x,y);
         const distance = p0.distanceTo(p1);
-        const diff = Math.min(Math.max(distance/blocksRadius, 0), 1);
-        console.log([p0.x, p0.y], [x,y], distance, blocksRadius, diff);
+        const diff = Math.min(Math.max(1-distance/blocksRadius, 0), 1);
+        
         this.data[x][y] += strength*diff;
       }
     }
-    console.groupEnd()
+    
   }
   constructor(x: number, y: number ) {
     this.w = x;
@@ -38,7 +38,7 @@ export class WorldGrid {
     for (let x = 0; x < this.w; x++) {
       this.data.push([]);
       for (let y = 0; y < this.h; y++) {
-        this.data[x].push((x+y)*0.05);
+        this.data[x].push(0);
       }
     }
 

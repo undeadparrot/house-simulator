@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { AssetLoader } from "./AssetLoader";
-import { GREEN } from "./constants";
 import { WorldGrid } from "./WorldGrid";
 
 const FLOATS_PER_VERT_POSITION = 3;
@@ -26,7 +25,16 @@ export class WorldTerrainRenderer {
     this._texture.minFilter = THREE.NearestFilter;
 
     const geom = new THREE.BufferGeometry();
-    const material = new THREE.MeshBasicMaterial({map: this._texture});//MeshStandardMaterial( { map: this._texture });
+    const material = new THREE.MeshBasicMaterial({map: this._texture});
+    // const material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide});
+    // material.onBeforeCompile = shader => console.log({shader});
+    //   shader.fragmentShader = shader.fragmentShader.replace(
+    //     `#include <fog_fragment>`,
+    //     `#include <fog_fragment>
+    // gl_FragColor.rgb = gl_FrontFacing ? vec3(0,1,0) : vec3(1, 0, 0);
+    // `
+    //   );
+    // }
     this._mesh = new THREE.Mesh(geom, material);
     this._group.add(this._mesh);
 
@@ -78,7 +86,6 @@ export class WorldTerrainRenderer {
     let tris = 0;
     let i = 0;
     let j = 0;
-    let k = 0;
     const positions = this._positionBuffer;
     const uvs = this._uvBuffer;
     for (let y = 0; y < world.h-1; y++) {
@@ -88,22 +95,15 @@ export class WorldTerrainRenderer {
             const blHeight = world.get(x,y+1)!;
             const brHeight = world.get(x+1,y+1)!;
 
-            const texture = {tl: new THREE.Vector2(0,0), tr: new THREE.Vector2(0.5,0),bl: new THREE.Vector2(0,0.5), br: new THREE.Vector2(0.5,0.5)}
+            const texture = {tl: new THREE.Vector2(0,1), tr: new THREE.Vector2(1,1),bl: new THREE.Vector2(0,0), br: new THREE.Vector2(1,0)}
 
-            /* Top Right */
-            positions[i++] = x+1;
-            positions[i++] = trHeight;
-            positions[i++] = y;
-            uvs[j++] = texture.tr.x;
-            uvs[j++] = texture.tr.y;
-            
             /* Top Left */
             positions[i++] = x;
             positions[i++] = tlHeight;
             positions[i++] = y;
             uvs[j++] = texture.tl.x;
             uvs[j++] = texture.tl.y;
-
+            
             /* Bottom Left */
             positions[i++] = x;
             positions[i++] = blHeight;
@@ -112,13 +112,14 @@ export class WorldTerrainRenderer {
             uvs[j++] = texture.bl.y;
             tris++;
 
-            /* Bottom Left */
-            positions[i++] = x;
-            positions[i++] = blHeight;
-            positions[i++] = y+1;
-            uvs[j++] = texture.bl.x;
-            uvs[j++] = texture.bl.y;
+            /* Top Right */
+            positions[i++] = x+1;
+            positions[i++] = trHeight;
+            positions[i++] = y;
+            uvs[j++] = texture.tr.x;
+            uvs[j++] = texture.tr.y;
 
+            
             /* Bottom Right */
             positions[i++] = x+1;
             positions[i++] = brHeight;
@@ -133,6 +134,13 @@ export class WorldTerrainRenderer {
             uvs[j++] = texture.tr.x;
             uvs[j++] = texture.tr.y;
             tris++;
+
+            /* Bottom Left */
+            positions[i++] = x;
+            positions[i++] = blHeight;
+            positions[i++] = y+1;
+            uvs[j++] = texture.bl.x;
+            uvs[j++] = texture.bl.y;
             }
         }
         this._positionAttribute.needsUpdate = true;
