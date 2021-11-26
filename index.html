@@ -6,17 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
     <style>
-      #debugtext {
+      #app-hud {
         position: absolute;
         top: 1em;
         left: 1em;
+        min-width: 14em;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
+      }
+      #app-hud pre {
+        margin: 4px;
+      }
+      .boxy {
+        box-shadow: 3px 3px 0px 0px black;
+        border: 1px solid black;
+        background: white;
+        padding: 4px;
       }
     </style> 
   </head>
-  <body style="padding: 0px; margin: 0px">
+  <body style="padding: 0px; margin: 0px" oncontextmenu="return false">
     <div id="app"></div>
     <canvas id="app-canvas" style="position: fixed; top: 0px; left: 0px;"></canvas>
-    <div id="debugtext"></div>
+    <div id="app-hud" >
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

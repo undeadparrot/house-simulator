@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { AssetLoader } from "./AssetLoader";
-import { WorldGrid } from "./WorldGrid";
+import { AssetLoader } from "../AssetLoader";
+import { WorldGrid } from "../WorldGrid";
 
 const FLOATS_PER_VERT_POSITION = 3;
 const FLOATS_PER_VERT_UV = 2;

@@ -30,7 +30,7 @@ export class PieMenu {
   close = () => {
     this.isOpen = false;
   };
-  accept = () => {
+  accept = (mouse: THREE.Vector2) => {
     console.log(this.activeItem);
     if (this.activeItem === undefined) {
       return;
@@ -42,7 +42,7 @@ export class PieMenu {
         .multiplyScalar(this.drawRadius)
         .add(this.center);
 
-      this.activeItem.callback(p);
+      this.activeItem.callback(p, mouse);
     }
   };
   onMouseDown = (p: THREE.Vector2) => {
@@ -88,7 +88,7 @@ export class PieMenu {
             this.activeItem = item;
             this.direction = roundedDirection;
             if (item.autoAccept && offset.length() > this.autoAcceptRadius) {
-              this.accept();
+              this.accept(p);
               this.close();
             }
             break;
@@ -102,8 +102,12 @@ export class PieMenu {
               this.direction = direction;
               this.drawDirection = direction;
 
+              if(item.rangeCallback){
+                item.rangeCallback(angle3);
+              }
+              
               if (item.autoAccept && offset.length() > this.autoAcceptRadius) {
-                this.accept();
+                this.accept(p);
                 this.close();
               }
             }

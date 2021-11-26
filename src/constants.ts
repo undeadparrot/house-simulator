@@ -7,3 +7,11 @@ export const CLEAR_COLOR = new THREE.Color(0.9, 0.9, 0.9);
 export const RED = new THREE.Color("red");
 export const GREEN = new THREE.Color("green");
 export const BLUE = new THREE.Color("blue");
+
+export const TOOL_DONE = "TOOL_DONE";
+export const TOOL_CLOSING = "TOOL_CLOSING";
+export const TOOL_BUSY = "TOOL_BUSY";
+
+export interface GameTool {
+    getName(): string;
+}

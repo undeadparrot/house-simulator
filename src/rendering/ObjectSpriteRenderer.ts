@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { AssetLoader } from "./AssetLoader";
+import { AssetLoader } from "../AssetLoader";
 
 const FLOATS_PER_VERT_POSITION = 3;
 const FLOATS_PER_VERT_UV = 2;

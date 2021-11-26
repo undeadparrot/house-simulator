@@ -1,7 +1,7 @@
-import { GameState } from "./gamestate";
-import "./pie-menu/PieMenuManager";
+import { GameRoot } from "./gameroot";
+import "./pie-menu/PieMenu";
 
-const gamestate = new GameState(32, 32);
+const gamestate = new GameRoot(32, 32);
 window.game = gamestate;
 
 window.addEventListener("resize", gamestate.resizeWindow);

@@ -11,9 +11,11 @@ export type PieMenuZone = {
 };
 export type PieMenuItem = {
   name: string;
+  tickAngle?: number;
   zone: PieMenuZone;
   autoAccept: boolean;
-  callback: (origin: THREE.Vector2) => void;
+  callback: (origin: THREE.Vector2, mouse: THREE.Vector2) => void;
+  rangeCallback?: (angle:number) => void;
 };
 
 export const PIE_MENU_DIRECTIONS = {
