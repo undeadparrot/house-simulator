@@ -8,8 +8,8 @@ const VERTS_PER_TRIANGLE = 3;
 // function makeMaterial(): THREE.Material {
 //     const material = new THREE.ShaderMaterial({
 //         // vertexShader: `
-//         // void main() 
-//         // { 
+//         // void main()
+//         // {
 //         //     vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
 //         //     gl_Position = projectionMatrix * modelViewPosition;
 //         // }
@@ -29,48 +29,53 @@ const VERTS_PER_TRIANGLE = 3;
 // }
 
 export class ObjectSpriteRenderer {
-    public object3d: THREE.Object3D;
-    _group: THREE.Group;
-    _texture: THREE.DataTexture;
-    _textureDepth: THREE.DataTexture;
-    _mesh: THREE.Mesh<THREE.BufferGeometry, THREE.Material>;
-    _positionBuffer: Float32Array;
-    _uvBuffer: Float32Array;
-    _positionAttribute: THREE.BufferAttribute;
-    _uvAttribute: THREE.BufferAttribute;
-    constructor(assetLoader: AssetLoader){
-        this._group = new THREE.Group();
-        this._texture = assetLoader.cube_colour;
-        this._textureDepth = assetLoader.cube_depth;
-        
-        /* for crisp pixellated textures */
-        // this._texture.magFilter = THREE.NearestFilter;
-        // this._texture.minFilter = THREE.NearestFilter;
+  public object3d: THREE.Object3D;
+  _group: THREE.Group;
+  _texture: THREE.DataTexture;
+  _textureDepth: THREE.DataTexture;
+  _mesh: THREE.Mesh<THREE.BufferGeometry, THREE.Material>;
+  _positionBuffer: Float32Array;
+  _uvBuffer: Float32Array;
+  _positionAttribute: THREE.BufferAttribute;
+  _uvAttribute: THREE.BufferAttribute;
+  constructor(assetLoader: AssetLoader) {
+    this._group = new THREE.Group();
+    this._texture = assetLoader.cube_colour;
+    this._textureDepth = assetLoader.cube_depth;
 
-        const geometry = new THREE.BufferGeometry();
-        const material = new THREE.MeshBasicMaterial({name: "FunnyDepthMaterial", map: this._texture});
-        // const material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide});
-        material.onBeforeCompile = shader => {
-            console.log({shader});
-            shader.uniforms['map_depth'] = {value: this._textureDepth}
-          shader.fragmentShader = shader.fragmentShader.replace(
-              `#include <common>`,
-              `#include <common>
+    /* for crisp pixellated textures */
+    // this._texture.magFilter = THREE.NearestFilter;
+    // this._texture.minFilter = THREE.NearestFilter;
+
+    const geometry = new THREE.BufferGeometry();
+    const material = new THREE.MeshBasicMaterial({
+      name: "FunnyDepthMaterial",
+      map: this._texture,
+    });
+    // const material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide});
+    material.onBeforeCompile = (shader) => {
+      console.log({ shader });
+      shader.uniforms["map_depth"] = { value: this._textureDepth };
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          `#include <common>`,
+          `#include <common>
               uniform sampler2D map_depth;`
-          ).replace(
-                `#include <fog_fragment>`,
-                `#include <fog_fragment>
+        )
+        .replace(
+          `#include <fog_fragment>`,
+          `#include <fog_fragment>
                 vec4 texelMapDepth = texture2D( map_depth, vUv );
                 texelMapDepth = mapTexelToLinear( texelMapDepth );
                 gl_FragDepth = 0.1 * texelMapDepth.g;
             `
-            );
-        }
-        this._mesh = new THREE.Mesh(geometry, material);
-        this._group.add(this._mesh);
-        this.object3d = this._group;
-        this.resizeBuffersForQuads(1);
-    }
+        );
+    };
+    this._mesh = new THREE.Mesh(geometry, material);
+    this._group.add(this._mesh);
+    this.object3d = this._group;
+    this.resizeBuffersForQuads(1);
+  }
 
   private resizeBuffersForQuads(quads: number) {
     const tris = quads * 2;
@@ -89,7 +94,7 @@ export class ObjectSpriteRenderer {
       new_uvBuffer[i] = this._uvBuffer[i];
     }
     this._uvBuffer = new_uvBuffer;
-    
+
     this._positionAttribute = new THREE.BufferAttribute(
       this._positionBuffer,
       FLOATS_PER_VERT_POSITION
@@ -104,56 +109,59 @@ export class ObjectSpriteRenderer {
     this._mesh.geometry.setDrawRange(0, tris * VERTS_PER_TRIANGLE);
   }
   public update = () => {
-
-    
     const positions = this._positionBuffer;
     const uvs = this._uvBuffer;
 
-    const texture = {tl: new THREE.Vector2(0,1), tr: new THREE.Vector2(1,1),bl: new THREE.Vector2(0,0), br: new THREE.Vector2(1,0)}
+    const texture = {
+      tl: new THREE.Vector2(0, 1),
+      tr: new THREE.Vector2(1, 1),
+      bl: new THREE.Vector2(0, 0),
+      br: new THREE.Vector2(1, 0),
+    };
 
     let tris = 0;
     let i = 0;
     let j = 0;
-    
+
     const x = 5;
     const y = 5;
     const z = 0.0;
     const spritew = 1;
     const spriteh = 1;
-    
+
     positions[i++] = x;
     positions[i++] = z;
     positions[i++] = y;
     uvs[j++] = texture.bl.x;
     uvs[j++] = texture.bl.y;
 
-    positions[i++] = x+spritew;
+    positions[i++] = x + spritew;
     positions[i++] = z;
-    positions[i++] = y-spritew;
+    positions[i++] = y - spritew;
     uvs[j++] = texture.br.x;
     uvs[j++] = texture.br.y;
 
     positions[i++] = x;
-    positions[i++] = z+spriteh;
+    positions[i++] = z + spriteh;
     positions[i++] = y;
     uvs[j++] = texture.tl.x;
     uvs[j++] = texture.tl.y;
-      
+
     positions[i++] = x;
-    positions[i++] = z+spriteh;
+    positions[i++] = z + spriteh;
     positions[i++] = y;
     uvs[j++] = texture.tl.x;
     uvs[j++] = texture.tl.y;
-      
-    positions[i++] = x+spritew;
+
+    positions[i++] = x + spritew;
     positions[i++] = z;
-    positions[i++] = y-spritew;
+    positions[i++] = y - spritew;
     uvs[j++] = texture.br.x;
     uvs[j++] = texture.br.y;
 
-    positions[i++] = x+spritew;
-    positions[i++] = z+spriteh;
-    positions[i++] = y-spritew;
+    positions[i++] = x + spritew;
+    positions[i++] = z + spriteh;
+    positions[i++] = y - spritew;
     uvs[j++] = texture.tr.x;
     uvs[j++] = texture.tr.y;
 
@@ -162,5 +170,5 @@ export class ObjectSpriteRenderer {
     this._mesh.geometry.computeVertexNormals();
     this._mesh.geometry.computeBoundingBox();
     this._mesh.geometry.computeBoundingSphere();
-  }
+  };
 }

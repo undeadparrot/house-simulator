@@ -1,21 +1,22 @@
 import * as THREE from "three";
 
-export type PieMenuZone = {
-  type: "direction";
-  value: keyof typeof PIE_MENU_DIRECTIONS;
-} |
-{
-  type: "range";
-  from: number;
-  to: number;
-};
+export type PieMenuZone =
+  | {
+      type: "direction";
+      value: keyof typeof PIE_MENU_DIRECTIONS;
+    }
+  | {
+      type: "range";
+      from: number;
+      to: number;
+    };
 export type PieMenuItem = {
   name: string;
   tickAngle?: number;
   zone: PieMenuZone;
   autoAccept: boolean;
   callback: (origin: THREE.Vector2, mouse: THREE.Vector2) => void;
-  rangeCallback?: (angle:number) => void;
+  rangeCallback?: (angle: number) => void;
 };
 
 export const PIE_MENU_DIRECTIONS = {

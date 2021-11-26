@@ -102,10 +102,10 @@ export class PieMenu {
               this.direction = direction;
               this.drawDirection = direction;
 
-              if(item.rangeCallback){
+              if (item.rangeCallback) {
                 item.rangeCallback(angle3);
               }
-              
+
               if (item.autoAccept && offset.length() > this.autoAcceptRadius) {
                 this.accept(p);
                 this.close();

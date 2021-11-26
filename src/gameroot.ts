@@ -1,9 +1,9 @@
-import { PieTool } from './tools/PieTool';
-import { PanningTool } from './tools/PanningTool';
+import { PieTool } from "./tools/PieTool";
+import { PanningTool } from "./tools/PanningTool";
 import * as THREE from "three";
 import { WorldGrid } from "./WorldGrid";
-import { ObjectSpriteRenderer } from "./rendering/ObjectSpriteRenderer"
-import { WorldTerrainRenderer } from "./rendering/WorldTerrainRenderer"
+import { ObjectSpriteRenderer } from "./rendering/ObjectSpriteRenderer";
+import { WorldTerrainRenderer } from "./rendering/WorldTerrainRenderer";
 import { InteractionController } from "./InteractionController";
 import {
   CLEAR_COLOR,
@@ -24,9 +24,15 @@ import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
 import { AssetLoader } from "./AssetLoader";
 import { degToRad } from "three/src/math/MathUtils";
 import { PieMenuManager } from "./pie-menu/PieMenuManager";
-import {Hud} from "./Hud";
-import {IdleTool} from "./tools/IdleTool";
-import { bootstrapPieMenus, pie1, pie2, pie3, pieTerrainTools } from "./pie-menu/pie-menu-definitions";
+import { Hud } from "./Hud";
+import { IdleTool } from "./tools/IdleTool";
+import {
+  bootstrapPieMenus,
+  pie1,
+  pie2,
+  pie3,
+  pieTerrainTools,
+} from "./pie-menu/pie-menu-definitions";
 
 const IDLE_TOOL = new IdleTool();
 
@@ -55,33 +61,35 @@ export class GameRoot {
   axes: THREE.AxesHelper;
   perspectiveCamera: THREE.PerspectiveCamera;
   piemans: PieMenuManager;
-  activeTool: GameTool;
   cameraHelper: THREE.CameraHelper;
   closingTools: GameTool[];
   nextActiveTool?: GameTool;
+  toolstack: GameTool[];
+  get activeTool(): GameTool {
+    return this.toolstack[this.toolstack.length - 1];
+  }
   constructor(width: number, height: number) {
     this.loaded = false;
     this.assets = new AssetLoader(this.onLoaded);
     this.hud = new Hud(15);
-    this.activeTool = IDLE_TOOL;
+    this.toolstack = [IDLE_TOOL];
     this.closingTools = [];
 
     this.clock = new THREE.Clock();
     this.scene = new THREE.Scene();
 
     this.activeBlock = 1;
-    
-    this.cameraPan = new THREE.Vector2(5,5);
+
+    this.cameraPan = new THREE.Vector2(5, 5);
     this.orthocam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 50);
-    this.orthocam.position.set(0,0,0);
+    this.orthocam.position.set(0, 0, 0);
     // this.orthocam.translateOnAxis(new THREE.Vector3(1,1,1), 2)
     // this.orthocam.rotation.set(Math.PI*0.15,Math.PI*0.25,0, 'YXZ');
     this.orthocam.rotateY(degToRad(45));
     this.orthocam.rotateX(-degToRad(30));
-    
-    this.orthocam.translateOnAxis(new THREE.Vector3(0,0,1), 10);
 
-      
+    this.orthocam.translateOnAxis(new THREE.Vector3(0, 0, 1), 10);
+
     const cameraHelper = new THREE.CameraHelper(this.orthocam);
     this.cameraHelper = cameraHelper;
     this.scene.add(cameraHelper);
@@ -94,7 +102,7 @@ export class GameRoot {
     this.renderer = new THREE.WebGLRenderer();
     var WW = window.innerWidth;
     var HH = window.innerHeight;
-    this.renderer.setSize( WW, HH );        
+    this.renderer.setSize(WW, HH);
     this.renderer.setClearColor(CLEAR_COLOR);
     this.renderer.autoClear = false;
     this.composer = new EffectComposer(this.renderer);
@@ -105,7 +113,6 @@ export class GameRoot {
     // this.effectFXAA.renderToScreen = true;
     // this.effectFXAA.enabled = false;
     // this.composer.addPass(this.effectFXAA);
-
 
     /* lighting */
     var ambientLight = new THREE.AmbientLight(0x33_44_55);
@@ -130,27 +137,25 @@ export class GameRoot {
 
     const axes = new THREE.AxesHelper(1);
     this.axes = axes;
-    axes.position.set(0,0.1,0);
+    axes.position.set(0, 0.1, 0);
     this.scene.add(axes);
     axes.setColors(RED, GREEN, BLUE);
     axes.translateX(0.001);
     axes.translateY(0.001);
 
     const gridHelper = new THREE.GridHelper(16, 16);
-    gridHelper.position.set(0,0,0);
+    gridHelper.position.set(0, 0, 0);
     this.scene.add(gridHelper);
 
     /* the game stuff */
     this.grid = new WorldGrid(width, height);
-    for(let i = 4; i<7; i++){
-      for(let j = 4; j<8; j++){
-      
+    for (let i = 4; i < 7; i++) {
+      for (let j = 4; j < 8; j++) {
         this.grid.data[i][j] = 0.5;
       }
     }
     this.interactions = new InteractionController();
     this.piemans = new PieMenuManager([pie1, pie2, pie3, pieTerrainTools]);
-
   }
   onLoaded = () => {
     this.loaded = true;
@@ -159,13 +164,13 @@ export class GameRoot {
     this.objectSpriteRenderer = new ObjectSpriteRenderer(this.assets);
     this.scene.add(this.objectSpriteRenderer.object3d);
     bootstrapPieMenus(this);
-    
+
     /* mount on the page */
     this.element = document.querySelector<HTMLDivElement>("#app")!;
     this.interactions.install(document);
     this.piemans.install(document);
     this.element.appendChild(this.renderer.domElement);
-  }
+  };
   resizeWindow = () => {
     // renderer.render( this.scene, this.camera );
     // const innerWidth = window.innerWidth;
@@ -179,26 +184,31 @@ export class GameRoot {
 
     const orthoratio = innerWidth / innerHeight;
     const offsetX = orthoratio;
-    const offsetY = (this.cameraPan.y + this.orthozoom);
-    this.orthocam.left = this.cameraPan.x + -1*orthoratio;// + this.cameraPan.x; 
-    this.orthocam.right = this.cameraPan.x + orthoratio;// + this.cameraPan.x; 
-    this.orthocam.top = this.cameraPan.y + -1 ;
-    this.orthocam.bottom = this.cameraPan.y + 1 ;
+    const offsetY = this.cameraPan.y + this.orthozoom;
+    this.orthocam.left = this.cameraPan.x + -1 * orthoratio; // + this.cameraPan.x;
+    this.orthocam.right = this.cameraPan.x + orthoratio; // + this.cameraPan.x;
+    this.orthocam.top = this.cameraPan.y + -1;
+    this.orthocam.bottom = this.cameraPan.y + 1;
     this.orthocam.zoom = this.orthozoom;
     this.orthocam.updateProjectionMatrix();
     this.cameraHelper.update();
-    
   };
   update = () => {
-    if(this.loaded === false){
+    if (this.loaded === false) {
       return;
     }
     const delta = this.clock.getDelta();
-    this.hud.setActiveTool([this.activeTool.getName(), ...this.closingTools.map(tool => tool.getName())].join("\n"));
-    if(this.interactions.leftPressed){
-      this.hud.logInfo("LDown")
-    }if(this.interactions.leftReleased){
-      this.hud.logInfo("LUp")
+    this.hud.setActiveTool(
+      [
+        this.activeTool.getName(),
+        ...this.closingTools.map((tool) => tool.getName()),
+      ].join("\n")
+    );
+    if (this.interactions.leftPressed) {
+      this.hud.logInfo("LDown");
+    }
+    if (this.interactions.leftReleased) {
+      this.hud.logInfo("LUp");
     }
     this.renderer.clear();
     // this.composer.render();
@@ -212,35 +222,48 @@ export class GameRoot {
     this.renderer.clearDepth();
     this.renderer.render(this.scene, this.perspectiveCamera);
 
-    const x =
-        (this.interactions.leftDownPos.x / this.element.clientWidth)  - 1;
-      const y =
-          (0 - (this.interactions.leftDownPos.y / this.element.clientHeight))  ;
-      const screenSpace = new THREE.Vector3(x, y, 0);
-      const raycaster = new THREE.Raycaster();
-      this.orthocam.updateProjectionMatrix()
-      this.orthocam.updateMatrixWorld()
-      raycaster.setFromCamera(screenSpace, this.orthocam);
-        this.hud.showNow(`${screenSpace.x.toFixed(2)} ${screenSpace.y.toFixed(2)} ${screenSpace.z.toFixed(2)}`);
+    const x = this.interactions.leftDownPos.x / this.element.clientWidth - 1;
+    const y = 0 - this.interactions.leftDownPos.y / this.element.clientHeight;
+    const screenSpace = new THREE.Vector3(x, y, 0);
+    const raycaster = new THREE.Raycaster();
+    this.orthocam.updateProjectionMatrix();
+    this.orthocam.updateMatrixWorld();
+    raycaster.setFromCamera(screenSpace, this.orthocam);
+    this.hud.showNow(
+      `${screenSpace.x.toFixed(2)} ${screenSpace.y.toFixed(
+        2
+      )} ${screenSpace.z.toFixed(2)}`
+    );
 
     const hits = this.terrainRenderer.raycast(raycaster);
-    const firstHit = hits[hits.length-1];
+    const firstHit = hits[hits.length - 1];
 
     this.updateClosingTools(delta);
-    if(this.activeTool === IDLE_TOOL){
+    if (this.activeTool === IDLE_TOOL) {
       if (this.interactions.leftPressed) {
         if (this.interactions.shiftDown) {
-          this.activeTool = new PanningTool(this.hud, this.interactions.mousePos, this.cameraPan,this.orthozoom,window.innerWidth,this.orthocam.right-this.orthocam.left,this.resizeWindow)
-        } 
-      }else if(this.interactions.rightPressed){
-
-        this.activeTool = new PieTool(this.hud, this.interactions.mousePos, this.piemans)
+          this.activeTool = new PanningTool(
+            this.hud,
+            this.interactions.mousePos,
+            this.cameraPan,
+            this.orthozoom,
+            window.innerWidth,
+            this.orthocam.right - this.orthocam.left,
+            this.resizeWindow
+          );
+        }
+      } else if (this.interactions.rightPressed) {
+        this.activeTool = new PieTool(
+          this.hud,
+          this.interactions.mousePos,
+          this.piemans
+        );
       }
     } else {
       this.updateActiveTool(delta);
     }
     // if (this.interactions.leftDown || this.interactions.leftClicked) {
-      
+
     //   this.brushTerrain(firstHit, screenSpace);
     // }
     // if (this.interactions.shiftDown) {
@@ -261,13 +284,18 @@ export class GameRoot {
   };
 
   public setNextActiveTool = (tool: GameTool) => {
-    this.hud.logInfo(this.activeTool.getName() + " -> " + tool.getName())
+    this.hud.logInfo(this.activeTool.getName() + " -> " + tool.getName());
     this.closingTools.push(this.activeTool);
     this.nextActiveTool = tool;
-  }
+  };
 
   private updateActiveTool = (delta: number) => {
-    const toolReturn = this.activeTool.update(false, delta, this.interactions, this.hud);
+    const toolReturn = this.activeTool.update(
+      false,
+      delta,
+      this.interactions,
+      this.hud
+    );
     switch (toolReturn) {
       case TOOL_DONE:
         this.hud.logInfo(this.activeTool.getName() + " Done");
@@ -278,11 +306,11 @@ export class GameRoot {
         this.setNextActiveTool(IDLE_TOOL);
         break;
     }
-    if(this.nextActiveTool !== undefined){
+    if (this.nextActiveTool !== undefined) {
       this.activeTool = this.nextActiveTool;
       this.nextActiveTool = undefined;
     }
-  }
+  };
 
   private updateClosingTools = (delta: number) => {
     const closedTools = [];
@@ -298,27 +326,43 @@ export class GameRoot {
           break;
       }
     }
-    closedTools.forEach(tool => this.closingTools.splice(this.closingTools.indexOf(tool), 1));
-  }
+    closedTools.forEach((tool) =>
+      this.closingTools.splice(this.closingTools.indexOf(tool), 1)
+    );
+  };
 
-  private brushTerrain(firstHit: THREE.Intersection<THREE.Object3D<THREE.Event>>, screenSpace: THREE.Vector3) {
+  private brushTerrain(
+    firstHit: THREE.Intersection<THREE.Object3D<THREE.Event>>,
+    screenSpace: THREE.Vector3
+  ) {
     if (firstHit !== undefined) {
       const hitTileX = Math.floor(firstHit.point.x);
       const hitTileZ = Math.floor(firstHit.point.z);
       const hitTileHeight = this.grid.get(hitTileX, hitTileZ) || 0;
       this.grid.brush(new THREE.Vector2(hitTileX, hitTileZ), 3, 0.05);
 
-      const hitTileBlPoint = new THREE.Vector3(hitTileX, hitTileHeight, hitTileZ);
-      const hitTileTrPoint = hitTileBlPoint.clone().add(new THREE.Vector3(1, 0.1, 1));
+      const hitTileBlPoint = new THREE.Vector3(
+        hitTileX,
+        hitTileHeight,
+        hitTileZ
+      );
+      const hitTileTrPoint = hitTileBlPoint
+        .clone()
+        .add(new THREE.Vector3(1, 0.1, 1));
 
       this.hitarrow.position.copy(firstHit.point);
       this.hitcage.box.setFromPoints([hitTileBlPoint, hitTileTrPoint]);
       if (firstHit.face) {
         const p0 = firstHit.point;
-        this.hud.showNow(`${screenSpace.x.toFixed(2)} ${screenSpace.y.toFixed(2)} ${screenSpace.z.toFixed(2)}`);
-        this.hud.showNow(`${p0.x.toFixed(2)} ${p0.y.toFixed(2)} ${p0.z.toFixed(2)}`);
+        this.hud.showNow(
+          `${screenSpace.x.toFixed(2)} ${screenSpace.y.toFixed(
+            2
+          )} ${screenSpace.z.toFixed(2)}`
+        );
+        this.hud.showNow(
+          `${p0.x.toFixed(2)} ${p0.y.toFixed(2)} ${p0.z.toFixed(2)}`
+        );
         this.hud.showNow(`faceindex: ${firstHit.faceIndex}`);
-
       }
     }
   }

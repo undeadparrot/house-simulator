@@ -58,8 +58,13 @@ export class PieMenuManager {
       }
     }
     for (const pie of this.pies) {
-      const { isOpen, drawRadius, autoAcceptRadius, center, drawDirection } =
-        pie;
+      const {
+        isOpen,
+        drawRadius,
+        autoAcceptRadius,
+        center,
+        drawDirection,
+      } = pie;
 
       if (isOpen) {
         this._ctx.fillStyle = "purple";

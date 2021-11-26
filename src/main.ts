@@ -12,5 +12,3 @@ export function animate() {
   requestAnimationFrame(animate);
 }
 animate();
-
-

@@ -25,7 +25,7 @@ export class WorldTerrainRenderer {
     this._texture.minFilter = THREE.NearestFilter;
 
     const geom = new THREE.BufferGeometry();
-    const material = new THREE.MeshBasicMaterial({map: this._texture});
+    const material = new THREE.MeshBasicMaterial({ map: this._texture });
     // const material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide});
     // material.onBeforeCompile = shader => console.log({shader});
     //   shader.fragmentShader = shader.fragmentShader.replace(
@@ -58,7 +58,7 @@ export class WorldTerrainRenderer {
       new_uvBuffer[i] = this._uvBuffer[i];
     }
     this._uvBuffer = new_uvBuffer;
-    
+
     this._positionAttribute = new THREE.BufferAttribute(
       this._positionBuffer,
       FLOATS_PER_VERT_POSITION
@@ -79,86 +79,90 @@ export class WorldTerrainRenderer {
       FLOATS_PER_VERT_POSITION /
       VERTS_PER_TRIANGLE;
     if (trianglesCount > currentSize) {
-        console.log("resizing to ", trianglesCount);
+      console.log("resizing to ", trianglesCount);
       this.resizeBuffers(trianglesCount);
     }
-    
+
     let tris = 0;
     let i = 0;
     let j = 0;
     const positions = this._positionBuffer;
     const uvs = this._uvBuffer;
-    for (let y = 0; y < world.h-1; y++) {
-        for (let x = 0; x < world.w-1; x++) {
-            const tlHeight = world.get(x,y)!;
-            const trHeight = world.get(x+1,y)!;
-            const blHeight = world.get(x,y+1)!;
-            const brHeight = world.get(x+1,y+1)!;
+    for (let y = 0; y < world.h - 1; y++) {
+      for (let x = 0; x < world.w - 1; x++) {
+        const tlHeight = world.get(x, y)!;
+        const trHeight = world.get(x + 1, y)!;
+        const blHeight = world.get(x, y + 1)!;
+        const brHeight = world.get(x + 1, y + 1)!;
 
-            const texture = {tl: new THREE.Vector2(0,1), tr: new THREE.Vector2(1,1),bl: new THREE.Vector2(0,0), br: new THREE.Vector2(1,0)}
+        const texture = {
+          tl: new THREE.Vector2(0, 1),
+          tr: new THREE.Vector2(1, 1),
+          bl: new THREE.Vector2(0, 0),
+          br: new THREE.Vector2(1, 0),
+        };
 
-            /* Top Left */
-            positions[i++] = x;
-            positions[i++] = tlHeight;
-            positions[i++] = y;
-            uvs[j++] = texture.tl.x;
-            uvs[j++] = texture.tl.y;
-            
-            /* Bottom Left */
-            positions[i++] = x;
-            positions[i++] = blHeight;
-            positions[i++] = y+1;
-            uvs[j++] = texture.bl.x;
-            uvs[j++] = texture.bl.y;
-            tris++;
+        /* Top Left */
+        positions[i++] = x;
+        positions[i++] = tlHeight;
+        positions[i++] = y;
+        uvs[j++] = texture.tl.x;
+        uvs[j++] = texture.tl.y;
 
-            /* Top Right */
-            positions[i++] = x+1;
-            positions[i++] = trHeight;
-            positions[i++] = y;
-            uvs[j++] = texture.tr.x;
-            uvs[j++] = texture.tr.y;
+        /* Bottom Left */
+        positions[i++] = x;
+        positions[i++] = blHeight;
+        positions[i++] = y + 1;
+        uvs[j++] = texture.bl.x;
+        uvs[j++] = texture.bl.y;
+        tris++;
 
-            
-            /* Bottom Right */
-            positions[i++] = x+1;
-            positions[i++] = brHeight;
-            positions[i++] = y+1;
-            uvs[j++] = texture.br.x;
-            uvs[j++] = texture.br.y;
+        /* Top Right */
+        positions[i++] = x + 1;
+        positions[i++] = trHeight;
+        positions[i++] = y;
+        uvs[j++] = texture.tr.x;
+        uvs[j++] = texture.tr.y;
 
-            /* Top Right */
-            positions[i++] = x+1;
-            positions[i++] = trHeight;
-            positions[i++] = y;
-            uvs[j++] = texture.tr.x;
-            uvs[j++] = texture.tr.y;
-            tris++;
+        /* Bottom Right */
+        positions[i++] = x + 1;
+        positions[i++] = brHeight;
+        positions[i++] = y + 1;
+        uvs[j++] = texture.br.x;
+        uvs[j++] = texture.br.y;
 
-            /* Bottom Left */
-            positions[i++] = x;
-            positions[i++] = blHeight;
-            positions[i++] = y+1;
-            uvs[j++] = texture.bl.x;
-            uvs[j++] = texture.bl.y;
-            }
-        }
-        this._positionAttribute.needsUpdate = true;
-        this._uvAttribute.needsUpdate = true;
-        this._mesh.geometry.computeVertexNormals();
-        this._mesh.geometry.computeBoundingBox();
-        this._mesh.geometry.computeBoundingSphere();
+        /* Top Right */
+        positions[i++] = x + 1;
+        positions[i++] = trHeight;
+        positions[i++] = y;
+        uvs[j++] = texture.tr.x;
+        uvs[j++] = texture.tr.y;
+        tris++;
+
+        /* Bottom Left */
+        positions[i++] = x;
+        positions[i++] = blHeight;
+        positions[i++] = y + 1;
+        uvs[j++] = texture.bl.x;
+        uvs[j++] = texture.bl.y;
+      }
     }
-    raycast = (raycaster: THREE.Raycaster) => {
-      const intersects: THREE.Intersection<THREE.Object3D<THREE.Event>>[] = [];
-      this._mesh.raycast(raycaster, intersects);
-      return intersects;
-    };
+    this._positionAttribute.needsUpdate = true;
+    this._uvAttribute.needsUpdate = true;
+    this._mesh.geometry.computeVertexNormals();
+    this._mesh.geometry.computeBoundingBox();
+    this._mesh.geometry.computeBoundingSphere();
+  };
+  raycast = (raycaster: THREE.Raycaster) => {
+    const intersects: THREE.Intersection<THREE.Object3D<THREE.Event>>[] = [];
+    this._mesh.raycast(raycaster, intersects);
+    return intersects;
+  };
 }
 
 //#region corners
-const xz = new THREE.Vector3(0,0,0);
-const Xz = new THREE.Vector3(1,0,0);
-const xZ = new THREE.Vector3(0,0,1);
-const XZ = new THREE.Vector3(1,0,1);
+const xz = new THREE.Vector3(0, 0, 0);
+const Xz = new THREE.Vector3(1, 0, 0);
+const xZ = new THREE.Vector3(0, 0, 1);
+const XZ = new THREE.Vector3(1, 0, 1);
 //#endregion corners

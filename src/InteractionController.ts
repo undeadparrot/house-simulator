@@ -52,18 +52,18 @@ export class InteractionController {
       this.mousePos.set(event.clientX, event.clientY);
     });
     element.addEventListener("click", (event: MouseEvent) => {
-      event.preventDefault()
+      event.preventDefault();
       console.log("click", event.type, event.button, event.buttons);
     });
     element.addEventListener("mousedown", (event: MouseEvent) => {
-      event.preventDefault()
+      event.preventDefault();
       console.log("mousedown", event.type, event.button, event.buttons);
       if (event.button === 0) {
         this.leftDown = true;
         this.leftDownPos = this.mousePos;
         this.leftDownTime = new Date();
         this.leftPressed = true;
-      } else if(event.button === 2){
+      } else if (event.button === 2) {
         this.rightDown = true;
         this.rightDownPos = this.mousePos;
         this.rightDownTime = new Date();
@@ -71,7 +71,7 @@ export class InteractionController {
       }
     });
     element.addEventListener("mouseup", (event: MouseEvent) => {
-      event.preventDefault()
+      event.preventDefault();
       console.log("mouseup", event.type, event.button, event.buttons);
       if (event.button === 0) {
         this.leftDown = false;
@@ -79,7 +79,7 @@ export class InteractionController {
         this.leftUpTime = new Date();
         this.leftClicked = true;
         this.leftReleased = true;
-      } else if(event.button === 2){
+      } else if (event.button === 2) {
         this.rightDown = false;
         this.rightUpPos = this.mousePos;
         this.rightUpTime = new Date();
@@ -89,14 +89,14 @@ export class InteractionController {
     });
     element.addEventListener("wheel", (event: WheelEvent) => {
       this.wheelDeltaTemp.add(new Vector2(event.deltaX, event.deltaY));
-        
+
       event.target.scrollLeft = 0;
       event.target.scrollTop = 0;
     });
     element.addEventListener("mousewheel", (event: WheelEvent) => {
       // this.wheelDeltaTemp.add(new Vector2(event.deltaX, event.deltaY));
       event.preventDefault();
-        
+
       event.target.scrollLeft = 0;
       event.target.scrollTop = 0;
     });

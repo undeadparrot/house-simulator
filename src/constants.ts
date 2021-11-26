@@ -13,5 +13,5 @@ export const TOOL_CLOSING = "TOOL_CLOSING";
 export const TOOL_BUSY = "TOOL_BUSY";
 
 export interface GameTool {
-    getName(): string;
+  getName(): string;
 }

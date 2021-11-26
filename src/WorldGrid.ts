@@ -7,30 +7,29 @@ export class WorldGrid {
     if (x >= this.w || y >= this.h) {
       return null;
     }
-    if (x < 0 || y < 0 ) {
+    if (x < 0 || y < 0) {
       return null;
     }
     return this.data[x][y];
   }
   public brush(p0: THREE.Vector2, width: number, strength: number) {
-    const blocksRadius = Math.ceil(width/2);
+    const blocksRadius = Math.ceil(width / 2);
     const p1 = new THREE.Vector2();
-    
-    for(let x = p0.x-blocksRadius; x < p0.x+blocksRadius; x++){
-      for(let y = p0.y-blocksRadius; y < p0.y+blocksRadius; y++){
-        if(x >= this.w || y >= this.h || x < 0 || y < 0){
+
+    for (let x = p0.x - blocksRadius; x < p0.x + blocksRadius; x++) {
+      for (let y = p0.y - blocksRadius; y < p0.y + blocksRadius; y++) {
+        if (x >= this.w || y >= this.h || x < 0 || y < 0) {
           continue;
         }
-        p1.set(x,y);
+        p1.set(x, y);
         const distance = p0.distanceTo(p1);
-        const diff = Math.min(Math.max(1-distance/blocksRadius, 0), 1);
-        
-        this.data[x][y] += strength*diff;
+        const diff = Math.min(Math.max(1 - distance / blocksRadius, 0), 1);
+
+        this.data[x][y] += strength * diff;
       }
     }
-    
   }
-  constructor(x: number, y: number ) {
+  constructor(x: number, y: number) {
     this.w = x;
     this.h = y;
     this.data = [];
@@ -41,6 +40,5 @@ export class WorldGrid {
         this.data[x].push(0);
       }
     }
-
   }
 }
