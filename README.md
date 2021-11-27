@@ -1,7 +1,7 @@
-Blocks in ThreeJS
+House Simulator
 ============
 
-Playing around with a 3d block grid using three-js and Perlin noise to populate the grid.
+Playing around with a house sim in a dimetric view using three-js
 
 ## How to develop on this
 
