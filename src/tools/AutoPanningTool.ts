@@ -1,3 +1,4 @@
+import { GameToolUpdatePayload, ToolReturnCode } from "./../constants";
 import * as THREE from "three";
 import { InteractionController } from "../InteractionController";
 import { Hud } from "../Hud";
@@ -29,12 +30,11 @@ export class AutoPanningTool implements GameTool {
     return "Panning";
   };
   update = (
-    closing: boolean,
+    shouldClose: boolean,
     delta: number,
-    interactions: InteractionController,
-    hud: Hud
-  ) => {
-    if (closing) {
+    { interactions, hud }: GameToolUpdatePayload
+  ): ToolReturnCode => {
+    if (shouldClose) {
       return TOOL_DONE;
     }
     if (this._firstUpdate) {
@@ -46,16 +46,19 @@ export class AutoPanningTool implements GameTool {
       return TOOL_DONE;
     }
     this._offset.copy(this._start).sub(interactions.mousePos);
-    this._pan.add(
-      new THREE.Vector2(
-        -(this._offset.x * (0.05 / this._zoom)) * delta,
-        -(this._offset.y * (0.05 / this._zoom)) * delta
-      )
-    );
+    if (this._offset.length() > 5) {
+      this._pan.add(
+        new THREE.Vector2(
+          -(this._offset.x * (0.05 / this._zoom)) * delta,
+          -(this._offset.y * (0.05 / this._zoom)) * delta
+        )
+      );
+      this._dirtyCallback();
+    }
+    hud.drawArrow(this._start,interactions.mousePos);
     hud.showNow(
       `pan: ${this._offset.x.toFixed(0)},${this._offset.y.toFixed(0)}`
     );
-    this._dirtyCallback();
     return TOOL_BUSY;
   };
 }

@@ -1,15 +1,15 @@
 import { HeightBrushTool } from "./../tools/HeightBrushTool";
 import { AutoPanningTool } from "../tools/AutoPanningTool";
-import { PanningTool } from "./../tools/PanningTool";
+import { easeInOutQuad, easeInOutQuadReverse } from "./../easing";
 import { PieMenu } from "./PieMenu";
-import { GameRoot } from "../gameroot";
+import { PieMenuBootstrapPayload } from "../constants";
 
 export const pie1 = new PieMenu(91, 110);
 export const pie2 = new PieMenu(91, 110);
 export const pie3 = new PieMenu(91, 110);
 export const pieTerrainTools = new PieMenu(91, 110);
 
-export function bootstrapPieMenus(game: GameRoot) {
+export function bootstrapPieMenus(game: PieMenuBootstrapPayload): void {
   pieTerrainTools.items.push({
     name: "Back",
     zone: { type: "direction", value: "bl" },
@@ -42,30 +42,35 @@ export function bootstrapPieMenus(game: GameRoot) {
       );
     },
   });
+
   pie2.items.push({
     name: "Back",
     zone: { type: "direction", value: "l" },
     autoAccept: true,
     callback: (_origin, mouse) => pie1.open(mouse),
   });
+
   pie1.items.push({
     name: "Terrain tools",
     zone: { type: "direction", value: "tr" },
     autoAccept: true,
     callback: (_origin, mouse) => pieTerrainTools.open(mouse),
   });
+
   pie1.items.push({
     name: "Righty Ho",
     zone: { type: "direction", value: "r" },
     autoAccept: true,
     callback: (_origin, mouse) => pie2.open(mouse),
   });
+
   pie1.items.push({
     name: "Lefty Yo",
     zone: { type: "direction", value: "l" },
     autoAccept: true,
     callback: (_origin, mouse) => pie3.open(mouse),
   });
+
   pie1.items.push({
     name: "BotToppity Left",
     zone: { type: "direction", value: "bl" },
@@ -80,20 +85,7 @@ export function bootstrapPieMenus(game: GameRoot) {
   const getZoomPercentage = () => {
     return (game.orthozoom - minZoom) / (maxZoom - minZoom);
   };
-  function easeInOutQuad(x: number): number {
-    if (x < 0.5) {
-      return x * x;
-    } else {
-      return 1 - Math.pow(-2 * x + 2, 2) / 2;
-    }
-  }
-  function easeInOutQuadReverse(x: number): number {
-    if (x < 0.5) {
-      return Math.sqrt(x);
-    } else {
-      return 0 - (Math.sqrt(-2 * x + 2) - 2) / 2;
-    }
-  }
+
   pie3.items.push({
     get name() {
       return `Zoomy Zoom ${(getZoomPercentage() * 100).toFixed(0)}`;

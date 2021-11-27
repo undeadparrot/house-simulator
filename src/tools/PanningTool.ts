@@ -1,3 +1,4 @@
+import { GameToolUpdatePayload, ToolReturnCode } from "./../constants";
 import * as THREE from "three";
 import { InteractionController } from "../InteractionController";
 import { Hud } from "../Hud";
@@ -31,12 +32,11 @@ export class PanningTool implements GameTool {
     return "Panning";
   };
   update = (
-    closing: boolean,
-    delta: number,
-    interactions: InteractionController,
-    hud: Hud
-  ) => {
-    if (closing) {
+    shouldClose: boolean,
+    _delta: number,
+    { interactions , hud}: GameToolUpdatePayload
+  ): ToolReturnCode => {
+    if (shouldClose) {
       return TOOL_DONE;
     }
     if (this._firstUpdate) {
@@ -48,6 +48,7 @@ export class PanningTool implements GameTool {
       const distance = interactions.mousePos.distanceTo(this._start);
       return TOOL_DONE;
     }
+    hud.setCursor("grabbing");
     this._pan.add(
       new THREE.Vector2(
         (-(interactions.mouseDelta.x / this._viewportWidth) *

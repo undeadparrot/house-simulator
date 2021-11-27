@@ -7,22 +7,19 @@ const CENTER_RADIUS = 8;
 
 export class PieMenuManager {
   pies: PieMenu[];
-  private _canvas: HTMLCanvasElement;
-  private _ctx: CanvasRenderingContext2D;
-  constructor(pies: PieMenu[]) {
+  private readonly _ctx: CanvasRenderingContext2D;
+  constructor(pies: PieMenu[], ctx: CanvasRenderingContext2D) {
     this.pies = pies;
 
-    this._canvas = document.getElementById("app-canvas")!;
-    this._ctx = this._canvas.getContext("2d");
+    this._ctx = ctx;
   }
   resizeWindow = () => {
-    console.log("resize piemenu canvas");
-
+    const canvas = this._ctx.canvas;
     let ratio = window.devicePixelRatio;
-    this._canvas.style.width = `${window.innerWidth}px`;
-    this._canvas.style.height = `${window.innerHeight}px`;
-    this._canvas.width = window.innerWidth * ratio;
-    this._canvas.height = window.innerHeight * ratio;
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+    canvas.width = window.innerWidth * ratio;
+    canvas.height = window.innerHeight * ratio;
     this._ctx.scale(ratio, ratio);
   };
 
@@ -36,8 +33,6 @@ export class PieMenuManager {
     mouseWasPressed: boolean,
     mouseWasReleased: boolean
   ): string => {
-    const { width, height } = this._canvas;
-    this._ctx.clearRect(0, 0, width, height);
     this._ctx.lineWidth = 1;
     if (mouseWasPressed) {
       if (this.pies.filter((pie) => pie.isOpen).length === 0) {
@@ -204,7 +199,6 @@ export class PieMenuManager {
         // return TOOL_CLOSING;
       }
     }
-    this._ctx.clearRect(0, 0, width, height);
     return TOOL_DONE;
   };
 }

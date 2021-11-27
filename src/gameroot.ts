@@ -1,3 +1,4 @@
+import { ToolController } from "./pie-menu/ToolController";
 import { PieTool } from "./tools/PieTool";
 import { PanningTool } from "./tools/PanningTool";
 import * as THREE from "three";
@@ -16,6 +17,8 @@ import {
   TOOL_DONE,
   TOOL_CLOSING,
   GameTool,
+  GameToolUpdatePayload,
+  PieMenuBootstrapPayload,
 } from "./constants";
 import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
@@ -34,46 +37,60 @@ import {
   pieTerrainTools,
 } from "./pie-menu/pie-menu-definitions";
 
-const IDLE_TOOL = new IdleTool();
-
-export class GameRoot {
+export class GameRoot
+  implements GameToolUpdatePayload, PieMenuBootstrapPayload {
   loaded: boolean;
-  hud: Hud;
-  grid: WorldGrid;
-  assets: AssetLoader;
-  interactions: InteractionController;
+  readonly hud: Hud;
+  readonly grid: WorldGrid;
+  readonly assets: AssetLoader;
+  readonly interactions: InteractionController;
   activeBlock: number;
   /* threejs things */
-  clock: THREE.Clock;
-  scene: THREE.Scene;
-  cameraPan: THREE.Vector2;
-  orthocam: THREE.OrthographicCamera;
+  readonly clock: THREE.Clock;
+  readonly scene: THREE.Scene;
+  readonly cameraPan: THREE.Vector2;
+  readonly orthocam: THREE.OrthographicCamera;
   orthozoom: number;
-  renderer: THREE.WebGLRenderer;
-  composer: EffectComposer;
-  renderp: RenderPass;
-  effectFXAA: ShaderPass;
-  hitarrow: THREE.ArrowHelper;
-  hitcage: THREE.Box3Helper;
-  element: HTMLDivElement;
-  terrainRenderer: WorldTerrainRenderer;
-  objectSpriteRenderer: ObjectSpriteRenderer;
-  axes: THREE.AxesHelper;
-  perspectiveCamera: THREE.PerspectiveCamera;
-  piemans: PieMenuManager;
-  cameraHelper: THREE.CameraHelper;
-  closingTools: GameTool[];
-  nextActiveTool?: GameTool;
-  toolstack: GameTool[];
-  get activeTool(): GameTool {
-    return this.toolstack[this.toolstack.length - 1];
-  }
+  readonly renderer: THREE.WebGLRenderer;
+  readonly composer: EffectComposer;
+  readonly renderp: RenderPass;
+  readonly effectFXAA: ShaderPass;
+  readonly hitarrow: THREE.ArrowHelper;
+  readonly hitcage: THREE.Box3Helper;
+  readonly element: HTMLDivElement;
+  readonly terrainRenderer: WorldTerrainRenderer;
+  readonly objectSpriteRenderer: ObjectSpriteRenderer;
+  readonly axes: THREE.AxesHelper;
+  readonly perspectiveCamera: THREE.PerspectiveCamera;
+  readonly piemans: PieMenuManager;
+  readonly cameraHelper: THREE.CameraHelper;
+  readonly toolController: ToolController;
+  terrainHit?: THREE.Intersection<THREE.Object3D<THREE.Event>>;
+  readonly _hudCtx: CanvasRenderingContext2D;
   constructor(width: number, height: number) {
     this.loaded = false;
     this.assets = new AssetLoader(this.onLoaded);
-    this.hud = new Hud(15);
-    this.toolstack = [IDLE_TOOL];
-    this.closingTools = [];
+
+    const hudCanvas = document.getElementById("app-canvas")! as HTMLDivElement;
+    this._hudCtx = hudCanvas.getContext("2d") as CanvasRenderingContext2D;
+
+    this.hud = new Hud(15, this._hudCtx);
+    this.toolController = new ToolController(
+      (setNextTool) =>
+        new IdleTool(
+          setNextTool,
+          () =>
+            new PanningTool(
+              this.hud,
+              this.interactions.mousePos,
+              this.cameraPan,
+              this.orthozoom,
+              window.innerWidth,
+              this.orthocam.right - this.orthocam.left,
+              this.resizeWindow
+            )
+        )
+    );
 
     this.clock = new THREE.Clock();
     this.scene = new THREE.Scene();
@@ -155,7 +172,7 @@ export class GameRoot {
       }
     }
     this.interactions = new InteractionController();
-    this.piemans = new PieMenuManager([pie1, pie2, pie3, pieTerrainTools]);
+    this.piemans = new PieMenuManager([pie1, pie2, pie3, pieTerrainTools], this._hudCtx);
   }
   onLoaded = () => {
     this.loaded = true;
@@ -170,6 +187,7 @@ export class GameRoot {
     this.interactions.install(document);
     this.piemans.install(document);
     this.element.appendChild(this.renderer.domElement);
+
   };
   resizeWindow = () => {
     // renderer.render( this.scene, this.camera );
@@ -198,19 +216,22 @@ export class GameRoot {
       return;
     }
     const delta = this.clock.getDelta();
-    this.hud.setActiveTool(
-      [
-        this.activeTool.getName(),
-        ...this.closingTools.map((tool) => tool.getName()),
-      ].join("\n")
-    );
+    this.hud.setActiveTool(this.toolController.activeTool.getName());
+    this.hud.setCursor("default")
     if (this.interactions.leftPressed) {
       this.hud.logInfo("LDown");
     }
     if (this.interactions.leftReleased) {
       this.hud.logInfo("LUp");
     }
+    if (this.interactions.rightPressed) {
+      this.hud.logInfo("RDown");
+    }
+    if (this.interactions.rightReleased) {
+      this.hud.logInfo("RUp");
+    }
     this.renderer.clear();
+    this._hudCtx.clearRect(0, 0, innerWidth, innerHeight);
     // this.composer.render();
     this.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
     this.renderer.render(this.scene, this.orthocam);
@@ -236,32 +257,10 @@ export class GameRoot {
     );
 
     const hits = this.terrainRenderer.raycast(raycaster);
-    const firstHit = hits[hits.length - 1];
+    this.terrainHit = hits[hits.length - 1];
 
-    this.updateClosingTools(delta);
-    if (this.activeTool === IDLE_TOOL) {
-      if (this.interactions.leftPressed) {
-        if (this.interactions.shiftDown) {
-          this.activeTool = new PanningTool(
-            this.hud,
-            this.interactions.mousePos,
-            this.cameraPan,
-            this.orthozoom,
-            window.innerWidth,
-            this.orthocam.right - this.orthocam.left,
-            this.resizeWindow
-          );
-        }
-      } else if (this.interactions.rightPressed) {
-        this.activeTool = new PieTool(
-          this.hud,
-          this.interactions.mousePos,
-          this.piemans
-        );
-      }
-    } else {
-      this.updateActiveTool(delta);
-    }
+    this.toolController.update(delta, this);
+
     // if (this.interactions.leftDown || this.interactions.leftClicked) {
 
     //   this.brushTerrain(firstHit, screenSpace);
@@ -284,86 +283,7 @@ export class GameRoot {
   };
 
   public setNextActiveTool = (tool: GameTool) => {
-    this.hud.logInfo(this.activeTool.getName() + " -> " + tool.getName());
-    this.closingTools.push(this.activeTool);
-    this.nextActiveTool = tool;
+    this.toolController.setNextTool(tool);
   };
 
-  private updateActiveTool = (delta: number) => {
-    const toolReturn = this.activeTool.update(
-      false,
-      delta,
-      this.interactions,
-      this.hud
-    );
-    switch (toolReturn) {
-      case TOOL_DONE:
-        this.hud.logInfo(this.activeTool.getName() + " Done");
-        this.activeTool = IDLE_TOOL;
-        break;
-      case TOOL_CLOSING:
-        this.hud.logInfo(this.activeTool.getName() + " (closing)");
-        this.setNextActiveTool(IDLE_TOOL);
-        break;
-    }
-    if (this.nextActiveTool !== undefined) {
-      this.activeTool = this.nextActiveTool;
-      this.nextActiveTool = undefined;
-    }
-  };
-
-  private updateClosingTools = (delta: number) => {
-    const closedTools = [];
-    for (const tool of this.closingTools) {
-      const toolReturn = tool.update(true, delta, this.interactions, this.hud);
-
-      switch (toolReturn) {
-        case TOOL_DONE:
-          closedTools.push(tool);
-          this.hud.logInfo(tool.getName() + " (closing) Done");
-          break;
-        case TOOL_CLOSING:
-          break;
-      }
-    }
-    closedTools.forEach((tool) =>
-      this.closingTools.splice(this.closingTools.indexOf(tool), 1)
-    );
-  };
-
-  private brushTerrain(
-    firstHit: THREE.Intersection<THREE.Object3D<THREE.Event>>,
-    screenSpace: THREE.Vector3
-  ) {
-    if (firstHit !== undefined) {
-      const hitTileX = Math.floor(firstHit.point.x);
-      const hitTileZ = Math.floor(firstHit.point.z);
-      const hitTileHeight = this.grid.get(hitTileX, hitTileZ) || 0;
-      this.grid.brush(new THREE.Vector2(hitTileX, hitTileZ), 3, 0.05);
-
-      const hitTileBlPoint = new THREE.Vector3(
-        hitTileX,
-        hitTileHeight,
-        hitTileZ
-      );
-      const hitTileTrPoint = hitTileBlPoint
-        .clone()
-        .add(new THREE.Vector3(1, 0.1, 1));
-
-      this.hitarrow.position.copy(firstHit.point);
-      this.hitcage.box.setFromPoints([hitTileBlPoint, hitTileTrPoint]);
-      if (firstHit.face) {
-        const p0 = firstHit.point;
-        this.hud.showNow(
-          `${screenSpace.x.toFixed(2)} ${screenSpace.y.toFixed(
-            2
-          )} ${screenSpace.z.toFixed(2)}`
-        );
-        this.hud.showNow(
-          `${p0.x.toFixed(2)} ${p0.y.toFixed(2)} ${p0.z.toFixed(2)}`
-        );
-        this.hud.showNow(`faceindex: ${firstHit.faceIndex}`);
-      }
-    }
-  }
 }

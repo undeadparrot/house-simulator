@@ -2,7 +2,13 @@ import * as THREE from "three";
 import { InteractionController } from "../InteractionController";
 import { Hud } from "../Hud";
 import { PieMenuManager } from "../pie-menu/PieMenuManager";
-import { GameTool, TOOL_BUSY, TOOL_CLOSING, TOOL_DONE } from "../constants";
+import {
+  GameTool,
+  GameToolUpdatePayload,
+  TOOL_BUSY,
+  TOOL_CLOSING,
+  TOOL_DONE,
+} from "../constants";
 export class PieTool implements GameTool {
   private _pieman: PieMenuManager;
   private _start: THREE.Vector2;
@@ -16,12 +22,11 @@ export class PieTool implements GameTool {
     return "Pie Menu";
   };
   update = (
-    closing: boolean,
+    shouldClose: boolean,
     delta: number,
-    interactions: InteractionController,
-    hud: Hud
+    { interactions, hud }: GameToolUpdatePayload
   ) => {
-    if (closing) {
+    if (shouldClose) {
       return TOOL_DONE;
     }
     const status = this._pieman.update(

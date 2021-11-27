@@ -1,23 +1,31 @@
 export class Hud {
-  private _element: HTMLDivElement;
-  private _element_immediate: HTMLPreElement;
-  private _element_log: HTMLPreElement;
-  private _element_activetool: HTMLPreElement;
+  private readonly _element: HTMLDivElement;
+  private readonly _element_immediate: HTMLPreElement;
+  private readonly _element_log: HTMLPreElement;
+  private readonly _element_activetool: HTMLPreElement;
   private _immediate: string;
   private _immediate_previous: string;
   private _logsize: number;
   private _logdirty: boolean;
-  private _log: string[];
+  private readonly _log: string[];
   private _activeTool: string;
   private _activeTool_dirty: boolean;
-  constructor(logsize: number) {
+  private readonly _arrows: [[number, number], [number, number]][];
+  private _cursor: string;
+  private _cursordirty: boolean;
+  this: any;
+  private readonly _canvasCtx: CanvasRenderingContext2D;
+  constructor(logsize: number, ctx: CanvasRenderingContext2D) {
     this._immediate = [];
     this._log = [];
     this._logdirty = false;
     this._activeTool = "?";
     this._activeTool_dirty = false;
+    this._arrows = [];
 
     this._element = document.getElementById("app-hud")! as HTMLDivElement;
+
+    this._canvasCtx = ctx;
 
     this._element_activetool = document.createElement("pre") as HTMLPreElement;
     this._element_activetool.id = "app-hud--activetool";
@@ -30,7 +38,7 @@ export class Hud {
     this._element_immediate = document.createElement("pre") as HTMLPreElement;
     this._element_immediate.id = "app-hud--immediate";
     this._element_immediate.className = "boxy";
-    this._element_immediate.style.height = "5em";
+    this._element_immediate.style.minHeight = "5em";
     this._element.appendChild(this._element_immediate);
 
     this._logsize = logsize;
@@ -39,6 +47,10 @@ export class Hud {
       this._element_log.appendChild(logline);
       this.logInfo(" ");
     }
+  }
+  setCursor(cursor: string) {
+    this._cursor = cursor;
+    this._cursordirty = true;
   }
   setActiveTool(tool: string) {
     if (tool !== this._activeTool) {
@@ -56,6 +68,9 @@ export class Hud {
   showNow(s: string) {
     this._immediate += s + "\n";
   }
+  drawArrow(from: THREE.Vector2, to: THREE.Vector2){
+    this._arrows.push([[from.x, from.y], [to.x, to.y]])
+  }
   update() {
     if (this._logdirty) {
       this._log.forEach((text, i) => {
@@ -70,6 +85,22 @@ export class Hud {
     if (this._immediate !== this._immediate_previous) {
       this._element_immediate.innerText = this._immediate;
       this._immediate_previous = this._immediate;
+    }
+    if (this._cursordirty) {
+      if(document.body.style.cursor !== this._cursor){
+        document.body.style.cursor = this._cursor;
+      }
+      this._cursordirty = false;
+    }
+    while(this._arrows.length){
+      const [from, to] = this._arrows.pop()!;
+      const [x0,y0] = from;
+      const [x1,y1] = to;
+      this._canvasCtx.beginPath()
+      this._canvasCtx.moveTo(x0,y0);
+      this._canvasCtx.lineTo(x1,y1);
+      this._canvasCtx.strokeStyle = "green"
+      this._canvasCtx.stroke()
     }
     this._immediate = "";
   }

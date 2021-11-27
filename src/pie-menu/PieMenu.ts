@@ -22,14 +22,17 @@ export class PieMenu {
     this.direction = PIE_MENU_DIRECTIONS.t.direction;
     this.drawDirection = PIE_MENU_DIRECTIONS.t.direction;
   }
+
   open = (p: THREE.Vector2) => {
     this.center.copy(p);
     this.drawRadius = 1;
     this.isOpen = true;
   };
+
   close = () => {
     this.isOpen = false;
   };
+
   accept = (mouse: THREE.Vector2) => {
     console.log(this.activeItem);
     if (this.activeItem === undefined) {
@@ -45,19 +48,22 @@ export class PieMenu {
       this.activeItem.callback(p, mouse);
     }
   };
+
   onMouseDown = (p: THREE.Vector2) => {
     const distance = this.center.distanceTo(p);
     if (distance > this.radius) {
       this.close();
     }
   };
+
   onMouseUp = (p: THREE.Vector2) => {
     const distance = this.center.distanceTo(p);
     if (distance > this.radius) {
-      this.accept();
+      this.accept(p);
       this.close();
     }
   };
+
   update = (delta: number, p: THREE.Vector2) => {
     if (this.isOpen) {
       if (this.drawRadius < this.radius) {
